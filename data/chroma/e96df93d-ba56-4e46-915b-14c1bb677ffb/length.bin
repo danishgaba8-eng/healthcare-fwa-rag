@@ -1,0 +1,7 @@
+SYNTHETIC TRAINING DATA | NOT REAL DOH DATA
+FWA-06 | Lesson 6 | Version 1.0 | 02 Nov 2026
+Page 6
+Stage 5 | Interview workbook and project acceptance
+Explain the project in 60 seconds
+I built a synthetic healthcare FWA assistant over six policy PDFs. I extracted page-aware text, chunked sections,
+created OpenAI embeddings, stored them in Chroma and used LangChain to retrieve evidence for an OpenAIt

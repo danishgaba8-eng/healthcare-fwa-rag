@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Healthcare FWA RAG</title>
+    <style>
+        body {
+            max-width: 680px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            font: 16px/1.5 system-ui, sans-serif;
+        }
+        textarea {
+            box-sizing: border-box;
+            display: block;
+            width: 100%;
+            margin: 0.5rem 0;
+            font: inherit;
+        }
+        #answer { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Healthcare FWA RAG</h1>
+    <p>Synthetic healthcare FWA training data.</p>
+
+    <form id="ask-form">
+        <label for="question">Your question</label>
+        <textarea id="question" rows="3" maxlength="2000" required></textarea>
+        <button id="submit-button" type="submit">Ask</button>
+    </form>
+
+    <p id="status" role="status"></p>
+
+    <h2>Answer</h2>
+    <p id="answer"></p>
+
+    <h2>Cited sources</h2>
+    <ul id="sources"></ul>
+
+    <script>
+        const form = document.querySelector("#ask-form");
+        const question = document.querySelector("#question");
+        const button = document.querySelector("#submit-button");
+        const status = document.querySelector("#status");
+        const answer = document.querySelector("#answer");
+        const sources = document.querySelector("#sources");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const text = question.value.trim();
+            if (!text) {
+                status.textContent = "Enter a question.";
+                return;
+            }
+
+            button.disabled = true;
+            status.textContent = "Searching the documents…";
+            answer.textContent = "";
+            sources.replaceChildren();
+
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: text }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed (HTTP ${response.status}).`);
+                }
+
+                const result = await response.json();
+                answer.textContent = result.answer;
+
+                for (const source of result.sources) {
+                    const item = document.createElement("li");
+                    item.textContent =
+                        `[${source.label}] ${source.source}, page ${source.page}, ` +
+                        `chunk ${source.chunk_number}`;
+                    sources.append(item);
+                }
+
+                status.textContent = "";
+            } catch (error) {
+                status.textContent = error.message;
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
