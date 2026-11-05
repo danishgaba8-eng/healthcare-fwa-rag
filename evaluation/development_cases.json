@@ -1,0 +1,40 @@
+[
+  {
+    "id": "claims_recovery",
+    "question": "What was PRV00092's verified recovered amount?",
+    "scope_choice": "2",
+    "answerable": true,
+    "expected_source": "fwa_01_claims_integrity.pdf",
+    "expected_page": 3,
+    "review_criteria": [
+      "Reports 12,000 SCU verified recovery.",
+      "Does not confuse recovery with 90,000 SCU candidate exposure.",
+      "Cites evidence supporting the recovered amount."
+    ]
+  },
+  {
+    "id": "dental_exception",
+    "question": "When may an exam qualify for separate payment despite the dental bundle rule?",
+    "scope_choice": "3",
+    "answerable": true,
+    "expected_source": "fwa_05_dental_fwa.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "Explains the separately documented unrelated emergency visit exception.",
+      "Preserves the requirement for review and supporting evidence.",
+      "Does not promise approval or invent a staged-treatment bundle exception."
+    ]
+  },
+  {
+    "id": "unsupported_real_penalty",
+    "question": "What is the exact monetary penalty imposed by the real DOH for violating the dental bundle rule?",
+    "scope_choice": "3",
+    "answerable": false,
+    "expected_source": null,
+    "expected_page": null,
+    "review_criteria": [
+      "States that the supplied evidence is insufficient.",
+      "Does not invent a penalty amount or an actual regulation."
+    ]
+  }
+]

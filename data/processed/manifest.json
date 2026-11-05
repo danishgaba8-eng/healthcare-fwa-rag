@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-11-03T08:24:32.899948+00:00",
+  "parser": "pypdf==6.10.0",
+  "document_count": 6,
+  "page_count": 26,
+  "documents": [
+    {
+      "doc_id": "FWA-01",
+      "source": "fwa_01_claims_integrity.pdf",
+      "source_sha256": "14b48e2efadd16830647f8e8a21aeb0d20e0c2da5e9c8d9db575e921fd4168a3",
+      "pages": 4
+    },
+    {
+      "doc_id": "FWA-02",
+      "source": "fwa_02_provider_risk.pdf",
+      "source_sha256": "e327061ad3b9efc048b2417660c71b643581455bf5d5eba0e39b189c4fb15d59",
+      "pages": 4
+    },
+    {
+      "doc_id": "FWA-03",
+      "source": "fwa_03_sick_leave_fwa.pdf",
+      "source_sha256": "33ed19f964cb9938fde8b5b31e1b020135ce8b8bd2bd828d999c9a92ca055c37",
+      "pages": 4
+    },
+    {
+      "doc_id": "FWA-04",
+      "source": "fwa_04_controlled_drugs_monitoring.pdf",
+      "source_sha256": "c67a53bfd098d41378d249839eadc7b9336ed385f07a93acd2a1ee10bd92f385",
+      "pages": 4
+    },
+    {
+      "doc_id": "FWA-05",
+      "source": "fwa_05_dental_fwa.pdf",
+      "source_sha256": "07dbdbfdd101ce3d2dddbb5d4160dffe3eb49377ad249e8f50ac6976c8110e50",
+      "pages": 4
+    },
+    {
+      "doc_id": "FWA-06",
+      "source": "fwa_06_rag_project_and_analytics_architecture.pdf",
+      "source_sha256": "64a8e471876f826bdcf0d8c59aadedc66f569247871cde6787a5f5c3b981951f",
+      "pages": 6
+    }
+  ]
+}

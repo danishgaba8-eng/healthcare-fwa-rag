@@ -1,0 +1,6 @@
+# Runtime packages match the deployed application.
+-r requirements-deploy.txt
+
+# Additional packages used by ingestion and chunking exercises.
+pypdf==6.10.0
+langchain-text-splitters==1.1.3

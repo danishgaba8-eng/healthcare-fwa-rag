@@ -1,0 +1,67 @@
+[
+  {
+    "id": "claims_corrected_replacement",
+    "question": "A corrected claim is linked to its original, and the two lines share the same member, provider, service date, procedure, units, and amount. Should the reviewer count both lines as an exact duplicate?",
+    "scope_choice": "1",
+    "answerable": true,
+    "expected_source": "fwa_01_claims_integrity.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "Explains that the linked correction should be evaluated as a replacement.",
+      "States that the original and replacement should not be counted twice.",
+      "Cites the duplicate and coding review policy."
+    ]
+  },
+  {
+    "id": "provider_small_peer_group",
+    "question": "A provider has 230 accepted lines, but its peer group contains only eight providers. How should the peer comparison be labeled?",
+    "scope_choice": "1",
+    "answerable": true,
+    "expected_source": "fwa_02_provider_risk.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "Identifies insufficient comparison data.",
+      "Explains that the provider meets the 200-line minimum but the group falls below the 10-provider minimum.",
+      "Does not assign a low score based on insufficient data."
+    ]
+  },
+  {
+    "id": "sick_leave_overlap_new_dates",
+    "question": "Two active sick-leave certificates for the same person cover September 10 through 12 and September 12 through 15. How many distinct calendar days do they cover together?",
+    "scope_choice": "1",
+    "answerable": true,
+    "expected_source": "fwa_03_sick_leave_fwa.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "Reports six distinct calendar days, September 10 through 15 inclusive.",
+      "Counts the shared day, September 12, only once.",
+      "Cites the inclusive duration and overlap rules."
+    ]
+  },
+  {
+    "id": "controlled_drugs_below_dispenser_threshold",
+    "question": "In a 30-calendar-day window, a synthetic person has three distinct prescribers and two distinct dispensers. Does this meet the coordination alert rule?",
+    "scope_choice": "1",
+    "answerable": true,
+    "expected_source": "fwa_04_controlled_drugs_monitoring.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "States that the coordination alert threshold is not met.",
+      "Explains that the rule requires at least three distinct prescribers and three distinct dispensers.",
+      "Avoids drawing any clinical or misuse conclusion."
+    ]
+  },
+  {
+    "id": "dental_repeat_restoration",
+    "question": "Two restoration records concern the same tooth 45 days apart. The treatment notes indicate staged care. What does the synthetic repeat-service rule call for?",
+    "scope_choice": "1",
+    "answerable": true,
+    "expected_source": "fwa_05_dental_fwa.pdf",
+    "expected_page": 1,
+    "review_criteria": [
+      "Identifies that 45 days falls within the 60-day review window.",
+      "Calls for review of the staged treatment evidence and relevant claim details.",
+      "Does not present the alert as an automatic denial or guarantee separate payment."
+    ]
+  }
+]
