@@ -1,4 +1,4 @@
-# Synthetic Healthcare FWA RAG
+# Healthcare FWA RAG
 
 A retrieval-augmented generation (RAG) assistant that answers questions about
 healthcare **fraud, waste and abuse (FWA)** policies, using evidence retrieved
@@ -6,9 +6,8 @@ from PDF policy documents and citing the exact source page.
 
 [**Open the hosted demo**](https://healthcare-fwa-rag-demo.onrender.com/) (login required)
 
-> **All data is synthetic.** The six source PDFs are fictional teaching
+> **All data is fictional.** The six source PDFs are fictional teaching
 > material. Providers, policies, thresholds, scenarios and financial figures do
-> not represent actual Department of Health (DOH) data or policy. Do not use this
 > project for real healthcare decisions.
 
 ## Contents
@@ -33,7 +32,7 @@ passages (filename, page and chunk). When the corpus does not support an answer,
 the assistant says the evidence is insufficient instead of guessing.
 
 **Example:** *What was PRV00092's verified recovered amount?*
-→ **12,000 synthetic currency units (SCU)**, citing Claims Integrity, page 3.
+→ **12,000  currency units (SCU)**, citing Claims Integrity, page 3.
 (The 90,000 SCU candidate paid exposure is a different measure.)
 
 More questions to try:
@@ -42,7 +41,7 @@ More questions to try:
 - Does three prescribers and two dispensers in 30 days meet the coordination alert rule?
 - How should a provider comparison be labeled with 230 accepted lines and eight peer providers?
 - How many distinct calendar days are covered by certificates for September 10–12 and September 12–15?
-- What is the real DOH penalty for violating the dental bundle rule? *(should return insufficient evidence)*
+- What is the real penalty for violating the dental bundle rule? *(should return insufficient evidence)*
 
 ## Tech stack
 
@@ -61,7 +60,7 @@ More questions to try:
 
 ```mermaid
 flowchart TD
-    PDFs[Six synthetic PDFs] --> Extract[Extract 26 page records]
+    PDFs[Six PDFs] --> Extract[Extract 26 page records]
     Extract --> Clean[Targeted corpus cleanup]
     Clean --> Split[Recursive chunking and stable IDs]
     Split --> Embed[OpenAI chunk embeddings]
@@ -273,7 +272,7 @@ LINE_BY_LINE.md            Line-by-line walkthrough of ingest.py
 requirements-deploy.txt    Pinned runtime dependencies (Render)
 requirements.txt           Runtime + ingestion/chunking dependencies
 .env.example               Empty credential template
-data/raw/                  Six synthetic PDFs and original practice scripts
+data/raw/                  Six  PDFs and original practice scripts
 data/processed/            Extracted pages and chunk records
 data/chroma/               Prepared Chroma snapshots (both collections)
 evaluation/                Development, validation and draft evaluation questions
