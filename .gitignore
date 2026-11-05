@@ -13,3 +13,6 @@ evaluation/results/
 *.log
 .test-*/
 staging-*/
+
+# Local editor settings
+.vscode/

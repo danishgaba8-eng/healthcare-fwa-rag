@@ -1,35 +1,61 @@
 # Synthetic Healthcare FWA RAG
 
-A deployed learning project that answers questions about healthcare fraud,
-waste and abuse (FWA) policies using retrieved PDF evidence and page citations.
-The corpus contains six wholly synthetic documents. Providers, policies,
-thresholds, scenarios and financial figures are fictional teaching examples.
-They do not represent actual Department of Health (DOH) data or policy.
+A retrieval-augmented generation (RAG) assistant that answers questions about
+healthcare **fraud, waste and abuse (FWA)** policies, using evidence retrieved
+from PDF policy documents and citing the exact source page.
 
-[Open the hosted demo](https://healthcare-fwa-rag-demo.onrender.com/)
+[**Open the hosted demo**](https://healthcare-fwa-rag-demo.onrender.com/) (login required)
 
-The browser page and question endpoint require the application login configured
-by the service owner. OpenAI API calls incur usage. Render Free can sleep when
-idle, so the first request after a pause can take longer.
+> **All data is synthetic.** The six source PDFs are fictional teaching
+> material. Providers, policies, thresholds, scenarios and financial figures do
+> not represent actual Department of Health (DOH) data or policy. Do not use this
+> project for real healthcare decisions.
 
-## Example
+## Contents
 
-**Question:** What was PRV00092's verified recovered amount?
+- [What it does](#what-it-does)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Quick start](#quick-start-windows-powershell)
+- [HTTP endpoints](#http-endpoints)
+- [Corpus and index versions](#corpus-and-index-versions)
+- [Rebuild the corpus](#rebuild-the-corpus)
+- [Evaluation](#evaluation)
+- [Retrieval experiments](#retrieval-experiments)
+- [Deployment on Render](#deployment-on-render)
+- [Repository layout](#repository-layout)
+- [Limitations and further work](#limitations-and-further-work)
 
-**Expected supported fact:** 12,000 synthetic currency units (SCU), with a
-citation to Claims Integrity, page 3. The 90,000 SCU candidate paid exposure
-is a different measure.
+## What it does
 
-Other questions to try:
+Ask a policy question in the browser and get a short answer backed by cited
+passages (filename, page and chunk). When the corpus does not support an answer,
+the assistant says the evidence is insufficient instead of guessing.
+
+**Example:** *What was PRV00092's verified recovered amount?*
+→ **12,000 synthetic currency units (SCU)**, citing Claims Integrity, page 3.
+(The 90,000 SCU candidate paid exposure is a different measure.)
+
+More questions to try:
 
 - When may an exam qualify for separate payment under the dental bundle rule?
 - Does three prescribers and two dispensers in 30 days meet the coordination alert rule?
 - How should a provider comparison be labeled with 230 accepted lines and eight peer providers?
 - How many distinct calendar days are covered by certificates for September 10–12 and September 12–15?
-- What is the real DOH penalty for violating the dental bundle rule?
+- What is the real DOH penalty for violating the dental bundle rule? *(should return insufficient evidence)*
 
-The last question should produce an insufficient-evidence answer because the
-corpus supplies synthetic training rules.
+## Tech stack
+
+| Layer | Choice |
+| --- | --- |
+| Language | Python 3.12 |
+| API and web UI | FastAPI, Uvicorn, a single `index.html` page |
+| Orchestration | LangChain (`langchain-core`, `langchain-openai`, `langchain-chroma`) |
+| Vector store | Chroma (persistent local snapshot in `data/chroma/`) |
+| Embeddings | OpenAI `text-embedding-3-small` (1,536 dimensions) |
+| Generation | OpenAI `gpt-4.1-mini` |
+| PDF parsing / chunking | `pypdf`, `langchain-text-splitters` |
+| Hosting | Render (free web service) |
 
 ## Architecture
 
@@ -51,39 +77,19 @@ flowchart TD
     Answer --> Browser
 ```
 
-The baseline uses `text-embedding-3-small` with 1,536-dimensional embeddings,
-`gpt-4.1-mini` for generation, and the `healthcare_fwa_policy_v2` collection.
-It retrieves three passages, with an optional source filter in the reusable
-Python function. `/ask` searches the corpus without a user-selected source filter.
+The served pipeline (`langchain_pipeline.py`) searches the
+`healthcare_fwa_policy_v2` collection and retrieves the top three passages. The
+reusable Python function accepts an optional source filter; the `/ask` endpoint
+searches the whole corpus.
 
-The application gives each passage a temporary citation label and maps the
-model's citations to stored source metadata. The automated check verifies that
-the cited label exists. Human evaluation checks whether a passage actually
-supports the associated claim.
+Each retrieved passage gets a temporary citation label. The model's citations
+are mapped back to stored source metadata, and an automated check confirms that
+every cited label exists. Whether a passage actually supports a claim is checked
+by human review during evaluation.
 
-## Corpus and index versions
+## Quick start (Windows PowerShell)
 
-The six source PDFs cover claims integrity, provider risk, sick-leave FWA,
-controlled drugs monitoring, dental FWA, and the original RAG/analytics learning
-workbook. The analytics implementation was removed from the project scope.
-The workbook remains one of the source documents.
-
-- Six PDFs produced **26 page records**.
-- Fixed-character splitting produced **159 chunks**.
-- Recursive splitting produced **146 chunks** using a 500-character target
-  and 100-character overlap.
-- Removing the Claims Integrity `RAG test` teaching-answer section produced
-  **145 chunks** in `healthcare_fwa_policy_v2`.
-- `healthcare_fwa_recursive_v1` preserves the original 146-chunk baseline.
-
-The repository includes the prepared synthetic Chroma snapshot so local startup
-does not require re-embedding the corpus. The targeted cleanup removed one
-known answer section. Additional instructional material remains in the corpus,
-and the existing cases are learning/development checks.
-
-## Quick start on Windows PowerShell
-
-Use Python 3.12. The project was tested with Python 3.12.14.
+Requires Python 3.12 (tested with 3.12.14) and an OpenAI API key.
 
 ```powershell
 git clone https://github.com/danishgaba8-eng/healthcare-fwa-rag-demo.git
@@ -95,179 +101,196 @@ python -m venv .venv
 Copy-Item .env.example .env
 ```
 
-Edit `.env` locally and fill in `OPENAI_API_KEY`, `RAG_APP_USERNAME`, and
-`RAG_APP_PASSWORD`. Generate a strong application password if needed:
+Edit `.env` and fill in:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Embedding and generation calls (usage is billed) |
+| `RAG_APP_USERNAME` | Login for the browser page and `/ask` |
+| `RAG_APP_PASSWORD` | Password for that login |
+
+Generate a strong application password if needed:
 
 ```powershell
 .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Start the app from the repository root:
+Start the app:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8001
 ```
 
-Open `http://127.0.0.1:8001/` in Edge or Chrome, sign in with your application
-credentials, and ask a question. The username and password are separate from
-the OpenAI API key. Browser HTTP Basic authentication prompts may be unavailable
-in an embedded editor preview.
-
-The requirements pin direct dependency versions. A fully locked transitive
-dependency environment is a future improvement.
+Open <http://127.0.0.1:8001/> in Edge or Chrome, sign in with the application
+credentials, and ask a question. The bundled Chroma snapshot means you do not
+need to re-embed the corpus before the first run. (Browser HTTP Basic prompts may
+not appear inside an embedded editor preview.)
 
 ## HTTP endpoints
 
-- `GET /health` returns `{"status":"ok"}` and is available without login.
-- `GET /` serves the browser interface after login.
-- `POST /ask` accepts a JSON question after login.
-- `GET /docs` exposes the generated API schema.
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | none | Returns `{"status":"ok"}` |
+| `GET` | `/` | login | Browser question page |
+| `POST` | `/ask` | login | Answers a JSON question |
+| `GET` | `/docs` | none | Generated OpenAPI schema |
 
-Example request body:
+Request body:
 
 ```json
 {"question": "What was PRV00092's verified recovered amount?"}
 ```
 
-The response contains `answer`, `sources`, and `data_notice`. Each source
-contains a citation label, filename, page number, and chunk number. The API
-rejects whitespace-only questions and enforces a 2,000-character input limit.
+The response contains `answer`, `sources` and `data_notice`. Each source has a
+citation label, filename, page number and chunk number. Questions must be
+non-blank and at most 2,000 characters. `/ask` logs a request ID, status and
+duration, and successful responses include an `X-Request-ID` header. Use HTTPS
+whenever the app is hosted, because HTTP Basic credentials are otherwise sent in
+clear text.
 
-Logs for `/ask` include a request ID, status, and duration. Successful handled
-responses include an `X-Request-ID` header. HTTPS should protect hosted
-HTTP Basic credentials.
+## Corpus and index versions
 
-## Rebuild the learning corpus
+The six PDFs cover claims integrity, provider risk, sick-leave FWA, controlled
+drugs monitoring, dental FWA, and an original RAG/analytics learning workbook.
 
-Run these commands from the repository root. Rebuilding embeddings makes
-OpenAI API requests. Keep the checked-in snapshot available as the baseline
-before experimenting with a rebuild.
+| Stage | Result |
+| --- | --- |
+| Page extraction | 26 page records |
+| Fixed-character splitting | 159 chunks |
+| Recursive splitting (500 chars, 100 overlap) | 146 chunks → `healthcare_fwa_recursive_v1` |
+| Removing the Claims Integrity "RAG test" teaching-answer section | 145 chunks → `healthcare_fwa_policy_v2` (served) |
+
+Both collections are included in `data/chroma/`. Some other instructional
+material remains in the corpus, so existing test cases are learning and
+development checks rather than an independent benchmark.
+
+## Rebuild the corpus
+
+Rebuilding embeddings makes OpenAI API requests. Keep the committed snapshot as
+a baseline before experimenting.
 
 ```powershell
-# The original lesson script extracts all PDF pages to practice_all_pages.json.
+# Extract all PDF pages to data/processed/practice_all_pages.json
 .\.venv\Scripts\python.exe data/raw/Ingestion.py
 
-# Remove the known embedded teaching-answer section and prepare 145 chunks.
+# Remove the known teaching-answer section and prepare 145 chunks
 .\.venv\Scripts\python.exe clean_policy_pages.py
 .\.venv\Scripts\python.exe prepare_policy_chunks.py
 
-# Embed and upsert the prepared chunks into the policy collection.
+# Embed and upsert the chunks into the policy collection
 .\.venv\Scripts\python.exe build_policy_index.py
 ```
 
-`ingest.py` is a separate validated ingestion exercise that writes `pages.jsonl`
-and a source manifest. `LINE_BY_LINE.md` explains its code. The preprocessing
-lesson uses `practice_all_pages.json`, so the two entry points have different
-output formats.
+`ingest.py` is a separate, validated ingestion exercise that writes
+`data/processed/pages.jsonl` plus a source manifest with SHA-256 hashes;
+`LINE_BY_LINE.md` explains its code line by line.
 
-Stable IDs prevent duplicate records for unchanged chunks. The upsert exercise
-does not remove obsolete IDs. Use a new collection or explicit deletion when
-changing the corpus to avoid retaining stale evidence.
+Stable chunk IDs prevent duplicates for unchanged chunks, but upserting does not
+delete obsolete IDs. When the corpus changes, use a new collection or delete
+stale records explicitly.
 
 ## Evaluation
 
 ```powershell
+# Ingestion contract checks (no model calls)
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+
+# End-to-end question suites (make OpenAI calls)
 .\.venv\Scripts\python.exe evaluate_langchain.py --suite development
 .\.venv\Scripts\python.exe evaluate_langchain.py --suite validation
 ```
 
-The ingestion checks use the actual synthetic corpus and run without model
-calls. The evaluation commands make embedding and generation requests and save
-timestamped JSON results under `evaluation/results/`.
-
-For manual review, select a specific result file:
+Results are written as timestamped JSON files under `evaluation/results/`
+(git-ignored). To review a run manually:
 
 ```powershell
 .\.venv\Scripts\python.exe review_results.py --input evaluation/results/YOUR_RESULT_FILE.json
 ```
 
-The review script asks for a status and notes, then writes a separate reviewed
-copy. Its automatic file selection finds development runs; use `--input` for
-a validation run.
+The review script records a status and notes per case and saves a separate
+reviewed copy.
 
-Recorded learning observations:
+Recorded observations from small learning runs:
 
-- Three development cases covered verified recovery, a dental exception,
-  and an unsupported real-world penalty.
-- Five validation cases searched across the whole corpus. All five retrieved
-  the expected source page in that run.
-- Manual review found three passes and two answers needing improvement.
-  The sick-leave answer lacked the complete cited overlap rule. The dental
-  answer generalized a specialist-review outcome from a specific example.
+- Three development cases covered verified recovery, a dental exception, and an
+  unsupported real-world penalty.
+- All five validation cases retrieved the expected source page.
+- Manual review: three passes, two needing improvement. The sick-leave answer
+  missed the complete overlap rule, and the dental answer over-generalized a
+  specialist-review outcome from one example.
 
-These counts describe small observed runs. They do not establish population
-accuracy or readiness for real healthcare decisions. Generated answers can
-vary across runs.
+These counts come from a handful of runs. They do not establish accuracy at
+scale, and generated answers can vary between runs.
 
 ## Retrieval experiments
 
-These scripts are learning experiments alongside the hosted similarity-search
-baseline. They have not been integrated into `answer_with_langchain()`.
+Learning experiments alongside the served similarity-search baseline; they are
+not wired into `answer_with_langchain()`.
 
-- `compare_indexes.py` and `compare_answers.py` compare corpus versions.
-- `compare_retrieval_depth.py` compares top-three and top-five retrieval.
-- `inspect_sick_leave_chunks.py` inspects the expected policy page.
-- `retrieve_with_neighbors.py` expands an automatically selected anchor with
-  same-page neighbors and generates an answer from the expanded evidence.
-- `search_policy_id.py` and `hybrid_search_policy_id.py` explore exact policy
-  identifiers, reciprocal rank fusion, and heading/body reranking.
+| Script | Experiment |
+| --- | --- |
+| `compare_indexes.py`, `compare_answers.py` | Compare the two corpus versions |
+| `compare_retrieval_depth.py` | Top-3 vs top-5 retrieval |
+| `inspect_sick_leave_chunks.py` | Inspect the expected sick-leave policy page |
+| `retrieve_with_neighbors.py` | Expand an anchor chunk with same-page neighbours |
+| `hybrid_search_policy_id.py` | Exact policy-ID keyword search, reciprocal rank fusion, heading/body reranking |
 
-For sick leave, the top result was page 1, chunk 3, while the overlap instruction
-was in chunk 4. Top-five retrieval still missed the exact rule. Adding chunks
-2–4 recovered it, and the answer cited the overlap instruction for six distinct
-calendar days. For `DE-P03`, the actual 60-day rule ranked second in keyword
-search and first in vector and hybrid search. The keyword heuristic then moved
-the rule above a heading-only result.
+Findings: for the sick-leave question, the top hit was page 1 chunk 3 while the
+overlap rule sat in chunk 4, and even top-5 retrieval missed it. Adding
+neighbouring chunks 2–4 recovered the rule, and the answer correctly cited six
+distinct calendar days. For policy ID `DE-P03`, the 60-day rule ranked second in
+keyword search and first in vector and hybrid search; the heading/body heuristic
+then lifted it above a heading-only result.
 
-## Render deployment
-
-The service uses the repository root with:
+## Deployment on Render
 
 ```text
-Build command: python -m pip install -r requirements-deploy.txt
-Start command: python -m uvicorn api:app --host 0.0.0.0 --port $PORT
-Health check: /health
+Build command:  python -m pip install -r requirements-deploy.txt
+Start command:  python -m uvicorn api:app --host 0.0.0.0 --port $PORT
+Health check:   /health
 PYTHON_VERSION: 3.12.14
 ```
 
-Set `OPENAI_API_KEY`, `RAG_APP_USERNAME`, and `RAG_APP_PASSWORD` using Render's
-environment settings. The `.env` file is excluded from Git. The deployed snapshot
-uses a local Chroma directory bundled with the release. Render Free discards
-runtime filesystem changes on restart, so persistent corpus updates require
-a separate deployment/storage design.
+Set `OPENAI_API_KEY`, `RAG_APP_USERNAME` and `RAG_APP_PASSWORD` in Render's
+environment settings (`.env` is never committed). The service reads the Chroma
+snapshot bundled in the repository. Render Free discards filesystem changes on
+restart and sleeps when idle, so the first request after a pause is slower and
+persistent corpus updates would need separate storage.
 
-The hosted smoke check verified health 200, unauthenticated `/ask` 401, and
-authenticated `/ask` 200 with the expected amount and page citation. The local
-staging check used the same Windows Python environment. Hosted verification
-then exercised the Linux deployment and copied Chroma snapshot.
+A hosted smoke test verified `/health` → 200, unauthenticated `/ask` → 401, and
+authenticated `/ask` → 200 with the expected amount and page citation.
 
 ## Repository layout
 
 ```text
-api.py                         HTTP API, browser route, login and request logging
-index.html                     Browser question form and cited sources
-langchain_pipeline.py          Hosted retrieval and answering implementation
-rag_pipeline.py                Earlier direct OpenAI/Chroma implementation
-requirements-deploy.txt        Pinned direct runtime dependencies
-requirements.txt               Runtime plus ingestion/chunking dependencies
-.env.example                   Empty credential fields for local setup
-data/raw/                      Six synthetic PDFs and original practice scripts
-data/processed/                Prepared synthetic pages and chunk records
-data/chroma/                   Prepared original and policy index snapshots
-evaluation/                    Development and validation questions
-tests/                         Ingestion contract checks
+api.py                     FastAPI app: browser route, login, /ask, request logging
+index.html                 Browser question form with cited sources
+langchain_pipeline.py      Served retrieval + answering pipeline
+langchain_retrieval.py     LangChain retrieval exercises
+rag_pipeline.py            Earlier direct OpenAI/Chroma implementation
+ingest.py                  Validated PDF ingestion with manifest and hashes
+LINE_BY_LINE.md            Line-by-line walkthrough of ingest.py
+requirements-deploy.txt    Pinned runtime dependencies (Render)
+requirements.txt           Runtime + ingestion/chunking dependencies
+.env.example               Empty credential template
+data/raw/                  Six synthetic PDFs and original practice scripts
+data/processed/            Extracted pages and chunk records
+data/chroma/               Prepared Chroma snapshots (both collections)
+evaluation/                Development, validation and draft evaluation questions
+tests/                     Ingestion contract tests
 ```
 
-Local credentials, Python environments, bytecode, traces and evaluation outputs
-are excluded by `.gitignore`. `.gitattributes` preserves Chroma and PDF files
-as binary data.
+`.gitignore` excludes credentials, virtual environments, bytecode, traces and
+evaluation outputs. `.gitattributes` marks Chroma and PDF files as binary.
 
-## Further work
+## Limitations and further work
 
-Broaden unseen evaluation, remove remaining teaching content, add claim-level
-evidence checks, and compare retrieval experiments across the full test set.
-For multiple users, add individual identities, document authorization, rate
-limits, bounded upstream calls, prompt-injection tests, backup/restore and
-rollback rehearsals. Agentic retrieval and structured calculation tools remain
-possible extensions. The analytics platform implementation is outside scope.
+- Direct dependencies are pinned; a fully locked transitive environment is not
+  yet provided.
+- Single shared login. Multi-user use would need individual identities,
+  document-level authorization and rate limits.
+- Next steps: broader unseen evaluation, removing remaining teaching content
+  from the corpus, claim-level evidence checks, prompt-injection tests, bounded
+  upstream calls, and backup/restore and rollback rehearsals.
+- Possible extensions: agentic retrieval and deterministic calculation tools for
+  numeric questions.
