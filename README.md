@@ -4,7 +4,7 @@ A retrieval-augmented generation (RAG) assistant that answers questions about
 healthcare **fraud, waste and abuse (FWA)** policies, using evidence retrieved
 from PDF policy documents and citing the exact source page.
 
-[**Open the hosted demo**](https://healthcare-fwa-rag-demo.onrender.com/) (login required)
+[**Open the live app**](https://healthcare-fwa-rag-demo.onrender.com/) (login required)
 
 > **All data is fictional.** The six source PDFs are fictional teaching
 > material. Providers, policies, thresholds, scenarios and financial figures do
@@ -91,8 +91,8 @@ by human review during evaluation.
 Requires Python 3.12 (tested with 3.12.14) and an OpenAI API key.
 
 ```powershell
-git clone https://github.com/danishgaba8-eng/healthcare-fwa-rag-demo.git
-Set-Location healthcare-fwa-rag-demo
+git clone https://github.com/danishgaba8-eng/healthcare-fwa-rag.git
+Set-Location healthcare-fwa-rag
 
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
